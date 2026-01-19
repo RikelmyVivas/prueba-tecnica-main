@@ -2,8 +2,17 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import productsRouter from "./routes/products";
+import { createDb, type Database } from "./db";
 
-const app = new Hono();
+type Bindings = {
+  DATABASE_URL: string;
+};
+
+type Variables = {
+  db: Database;
+};
+
+const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 app.use("*", logger());
 app.use(
@@ -12,37 +21,28 @@ app.use(
     origin: "*",
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
-  })
+  }),
 );
+
+app.use("*", async (c, next) => {
+  const db = createDb(c.env.DATABASE_URL);
+  c.set("db", db);
+  await next();
+});
 
 app.get("/", (c) => {
   return c.json({
-    message: "Products CRUD API - Prueba Técnica Frontend",
-    version: "1.0.0",
-    stack: "Bun + Hono + Drizzle ORM + Neon Database",
-    endpoints: {
-      "GET /api/products": "Listar productos (soporta ?search=...)",
-      "GET /api/products/:id": "Obtener producto por ID",
-      "POST /api/products": "Crear producto",
-      "PUT /api/products/:id": "Actualizar producto",
-      "DELETE /api/products/:id": "Eliminar producto",
-    },
+    message: "Products CRUD API - Cloudflare Edition 🚀",
+    stack: "Bun + Hono + Drizzle + Neon + Workers",
   });
 });
 
 app.route("/api/products", productsRouter);
 
-app.notFound((c) => {
-  return c.json({ error: "Ruta no encontrada" }, 404);
-});
-
+app.notFound((c) => c.json({ error: "Ruta no encontrada" }, 404));
 app.onError((err, c) => {
+  console.error(err);
   return c.json({ error: "Error interno del servidor" }, 500);
 });
 
-const port = process.env.PORT || 3001;
-
-export default {
-  port,
-  fetch: app.fetch,
-};
+export default app;

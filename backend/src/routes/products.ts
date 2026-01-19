@@ -1,12 +1,18 @@
 import { Hono } from "hono";
-import { db } from "../db";
 import { products } from "../db/schema";
 import { eq, ilike, or } from "drizzle-orm";
+import type { Database } from "../db";
 
-const productsRouter = new Hono();
+type Variables = {
+  db: Database;
+};
+
+const productsRouter = new Hono<{ Variables: Variables }>();
 
 productsRouter.get("/", async (c) => {
   try {
+    const db = c.get("db");
+
     const search = c.req.query("search");
 
     let result;
@@ -18,8 +24,8 @@ productsRouter.get("/", async (c) => {
           or(
             ilike(products.name, `%${search}%`),
             ilike(products.description, `%${search}%`),
-            ilike(products.category, `%${search}%`)
-          )
+            ilike(products.category, `%${search}%`),
+          ),
         );
     } else {
       result = await db.select().from(products);
@@ -34,6 +40,7 @@ productsRouter.get("/", async (c) => {
 
 productsRouter.get("/:id", async (c) => {
   try {
+    const db = c.get("db");
     const id = c.req.param("id");
     const result = await db.select().from(products).where(eq(products.id, id));
 
@@ -49,12 +56,13 @@ productsRouter.get("/:id", async (c) => {
 
 productsRouter.post("/", async (c) => {
   try {
+    const db = c.get("db");
     const body = await c.req.json();
 
     if (!body.name || !body.price || !body.description || !body.category) {
       return c.json(
         { error: "Campos requeridos: name, price, description, category" },
-        400
+        400,
       );
     }
 
@@ -77,6 +85,7 @@ productsRouter.post("/", async (c) => {
 
 productsRouter.put("/:id", async (c) => {
   try {
+    const db = c.get("db");
     const id = c.req.param("id");
     const body = await c.req.json();
 
@@ -113,6 +122,7 @@ productsRouter.put("/:id", async (c) => {
 
 productsRouter.delete("/:id", async (c) => {
   try {
+    const db = c.get("db");
     const id = c.req.param("id");
 
     const existing = await db
