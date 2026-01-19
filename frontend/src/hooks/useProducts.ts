@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import toast from "react-hot-toast";
 
 export interface Product {
   id: string;
@@ -23,19 +24,36 @@ export function useProducts() {
   }, []);
 
   const deleteProduct = async (id: string) => {
-    try {
-      const response = await fetch(`${API_URL}/api/products/${id}`, {
-        method: "DELETE",
-      });
+    const deletingPromise = new Promise<void>(async (resolve, reject) => {
+      try {
+        const response = await fetch(`${API_URL}/api/products/${id}`, {
+          method: "DELETE",
+        });
 
-      if (!response.ok) throw new Error("No se pudo eliminar");
+        if (!response.ok) throw new Error("No se pudo eliminar");
 
-      setProducts((prev) => prev.filter((p) => p.id !== id));
-      alert("Producto eliminado");
-    } catch (err) {
-      console.error(err);
-      alert("Error al eliminar el producto");
-    }
+        setProducts((prev) => prev.filter((p) => p.id !== id));
+        resolve();
+      } catch (err) {
+        console.error(err);
+        reject(err);
+      }
+    });
+
+    toast.promise(
+      deletingPromise,
+      {
+        loading: "Eliminando...",
+        success: "Producto eliminado correctamente",
+        error: "Error al eliminar el producto",
+      },
+      {
+        style: {
+          background: "#333",
+          color: "#fff",
+        },
+      },
+    );
   };
 
   useEffect(() => {
@@ -56,6 +74,7 @@ export function useProducts() {
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error desconocido");
+        toast.error("Error de conexión");
       } finally {
         setLoading(false);
       }

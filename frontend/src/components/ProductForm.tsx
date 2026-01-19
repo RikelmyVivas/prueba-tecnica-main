@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import type { Product } from "../hooks/useProducts";
 import { X, Save, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface Props {
   onSuccess: () => void;
@@ -42,6 +43,17 @@ export function ProductForm({ onSuccess, productToEdit, onClose }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const priceNum = Number(formData.price);
+    if (priceNum <= 0) {
+      toast.error("El precio debe ser mayor a 0");
+      return;
+    }
+
+    if (formData.name.length < 3) {
+      toast.error("El nombre debe tener al menos 3 letras");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {

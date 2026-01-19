@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useProducts, type Product } from "./hooks/useProducts";
 import { ProductForm } from "./components/ProductForm";
 import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
+import { Toaster } from "react-hot-toast";
+import { Footer } from "./components/Footer";
 
 import {
   Plus,
@@ -39,7 +41,9 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col">
+      <Toaster position="bottom-right" reverseOrder={false} />
+
       {/* Navbar Superior */}
       <nav className="bg-white border-b border-slate-200 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -64,7 +68,7 @@ function App() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
         {/* Barra de Herramientas (Buscador) */}
         <div className="mb-8">
           <div className="relative max-w-md">
@@ -194,7 +198,7 @@ function App() {
                 </button>
               </div>
             )}
-            {/* 2. Modal de Confirmación (Eliminar) */}
+            {/* Modal de Confirmación (Eliminar) */}
             <DeleteConfirmModal
               isOpen={!!productToDelete}
               onClose={() => setProductToDelete(null)}
@@ -209,6 +213,8 @@ function App() {
           </>
         )}
       </main>
+
+      <Footer />
     </div>
   );
 }
